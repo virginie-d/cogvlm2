@@ -23,6 +23,12 @@ def load_text_model(prefix, config, weights, name=None):
         )
 
         return FlashGemmaForCausalLM(prefix, config, weights)
+    elif config.model_type == "cogvlm2":
+        from text_generation_server.models.custom_modeling.flash_cogvlm2_modeling import (
+            FlashCogvlm2ForCausalLM,
+        )
+
+        return FlashCogvlm2ForCausalLM(prefix, config, weights)
     else:
         raise RuntimeError(f"Unsupported model type {config.model_type}")
 
@@ -34,6 +40,14 @@ def load_vision_model(prefix, config, weights):
         )
 
         return CLIPVisionTransformer(
+            prefix=f"{prefix}.vision_model", config=config, weights=weights
+        )
+    if  config.model_type == "eva2clip_vision_model":
+        from text_generation_server.models.custom_modeling.eva2clip import (
+            EVA2CLIPModel,
+        )
+
+        return EVA2CLIPModel(
             prefix=f"{prefix}.vision_model", config=config, weights=weights
         )
     if config.model_type == "siglip_vision_model":

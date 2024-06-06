@@ -75,6 +75,7 @@ try:
     from text_generation_server.models.idefics import IDEFICSSharded
     from text_generation_server.models.llava_next import LlavaNext
     from text_generation_server.models.idefics2 import Idefics2
+    from text_generation_server.models.cogvlm2 import Cogvlm2
     from text_generation_server.models.flash_mistral import FlashMistral
     from text_generation_server.models.flash_mixtral import FlashMixtral
     from text_generation_server.models.flash_phi import FlashPhi
@@ -859,6 +860,18 @@ def get_model(
     if model_type == LLAVA_NEXT:
         if FLASH_ATTENTION:
             return LlavaNext(
+                model_id,
+                revision,
+                quantize=quantize,
+                speculator=speculator,
+                dtype=dtype,
+                trust_remote_code=trust_remote_code,
+            )
+        else:
+            raise NotImplementedError(FLASH_ATT_ERROR_MESSAGE.format("LlavaNext"))
+    if model_type == "cogvlm2":
+        if FLASH_ATTENTION:
+            return Cogvlm2(
                 model_id,
                 revision,
                 quantize=quantize,

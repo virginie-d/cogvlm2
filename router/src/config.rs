@@ -118,6 +118,18 @@ impl Idefics2 {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
+pub struct Cogvlm2 {
+    num_image_tokens: usize,
+}
+
+impl Cogvlm2 {
+    pub fn get_number_of_features(&self) -> usize {
+        self.num_image_tokens
+    }
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub struct PaliTextConfig {
     num_image_tokens: usize,
 }
@@ -139,6 +151,7 @@ impl Paligemma {
 #[serde(rename_all = "snake_case")]
 pub enum Config {
     LlavaNext(LlavaNext),
+    Cogvlm2(Cogvlm2),
     ClipVisionModel(ClipVisionModel),
     Mistral,
     Idefics,

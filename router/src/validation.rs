@@ -141,7 +141,6 @@ impl Validation {
                     max_new_tokens,
                 ));
             }
-
             // Validate InputLength
             if input_length > self.max_input_length {
                 return Err(ValidationError::InputLength(
@@ -224,7 +223,6 @@ impl Validation {
         if temperature <= 0.0 {
             return Err(ValidationError::Temperature);
         }
-
         let repetition_penalty = repetition_penalty.unwrap_or(1.0);
         if repetition_penalty <= 0.0 {
             return Err(ValidationError::RepetitionPenalty);
@@ -309,12 +307,10 @@ impl Validation {
                 Ok(Some(value))
             })
             .unwrap_or(Ok(None))?;
-
         // Validate inputs
         let (inputs, input_length, max_new_tokens) = self
             .validate_input(request.inputs, truncate, max_new_tokens)
             .await?;
-
         // TODO: we should build the FSM here and pass the compiled FSM instead of the grammar
         // NOTE: this is currently difficult because we need the tokenizer in Python to build
         // the FSM and we'd have to load a copy of the tokenizer into our Pyo3 instance which
@@ -426,6 +422,7 @@ fn tokenizer_worker(
     config: Option<Config>,
     mut receiver: mpsc::UnboundedReceiver<TokenizerRequest>,
 ) {
+    
     // Loop over requests
     while let Some(((inputs, truncate), response_tx, parent_span)) = receiver.blocking_recv() {
         parent_span.in_scope(|| {
@@ -464,6 +461,9 @@ fn format_to_mimetype(format: ImageFormat) -> String {
     }
     .to_string()
 }
+
+
+
 
 fn fetch_image(input: &str) -> Result<(String, usize, usize), ValidationError> {
     if input.starts_with("![](http://") || input.starts_with("![](https://") {
@@ -619,6 +619,33 @@ fn prepare_input(
             inputs = modified_inputs;
             tokenizer_query
         }
+        Some(Config::Cogvlm2(config)) => {
+            let mut modified_inputs = String::with_capacity(inputs.len());
+            let mut tokenizer_query = String::with_capacity(inputs.len());
+            let mut start = 0;
+            for chunk in RE.find_iter(&inputs) {
+                let chunk_start = chunk.start();
+                let chunk_end = chunk.end();
+                if chunk_start != start {
+                    modified_inputs.push_str(&inputs[start..chunk_start]);
+                    tokenizer_query.push_str(&inputs[start..chunk_start]);
+                }
+                let image_uri = inputs[chunk_start..chunk_end].to_string();
+                if !image_uri.starts_with("![](data:") {
+                    return Err(ValidationError::InvalidImageContent(inputs));
+                }
+                let slots = config.get_number_of_features();
+                tokenizer_query.push_str(&"<|reserved_special_token_0|>".repeat(slots));
+                modified_inputs.push_str(&image_uri);
+                start = chunk_end;
+            }
+            if start != inputs.len() - 1 {
+                modified_inputs.push_str(&inputs[start..]);
+                tokenizer_query.push_str(&inputs[start..]);
+            }
+            inputs = modified_inputs;
+            tokenizer_query
+        }
         _ => inputs.clone(),
     };
 
@@ -629,6 +656,7 @@ fn prepare_input(
 
     Ok((encoding, inputs))
 }
+
 
 type TokenizerRequest = (
     (String, Option<usize>),
