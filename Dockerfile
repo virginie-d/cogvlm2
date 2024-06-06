@@ -108,6 +108,12 @@ COPY server/Makefile-flash-att-v2 Makefile
 # Build specific version of flash attention v2
 RUN make build-flash-attention-v2-cuda
 
+# Build apex
+FROM kernel-builder as apex-builder
+WORKDIR /usr/src
+COPY server/Makefile-apex Makefile
+RUN make build-apex
+
 # Build Transformers exllama kernels
 FROM kernel-builder as exllama-kernels-builder
 WORKDIR /usr/src
@@ -209,6 +215,7 @@ COPY --from=eetq-kernels-builder /usr/src/eetq/build/lib.linux-x86_64-cpython-31
 # Copy builds artifacts from vllm builder
 COPY --from=vllm-builder /usr/src/vllm/build/lib.linux-x86_64-cpython-310 /opt/conda/lib/python3.10/site-packages
 
+COPY --from=apex-builder  /usr/src/apex/build/lib.linux-x86_64-cpython-310 /opt/conda/lib/python3.10/site-packages
 # Copy build artifacts from mamba builder
 COPY --from=mamba-builder /usr/src/mamba/build/lib.linux-x86_64-cpython-310/ /opt/conda/lib/python3.10/site-packages
 COPY --from=mamba-builder /usr/src/causal-conv1d/build/lib.linux-x86_64-cpython-310/ /opt/conda/lib/python3.10/site-packages
