@@ -6,7 +6,7 @@ import numpy as np
 
 from dataclasses import dataclass
 from opentelemetry import trace
-from transformers import PreTrainedTokenizerBase, AutoTokenizer, AutoConfig
+from transformers import PreTrainedTokenizerBase, AutoTokenizer, AutoConfig, GenerationConfig
 from typing import Optional, Tuple, Type
 
 from text_generation_server.pb import generate_pb2
@@ -27,6 +27,7 @@ from text_generation_server.utils import (
     HeterogeneousNextTokenChooser,
     StoppingCriteria,
 )
+from loguru import logger
 
 tracer = trace.get_tracer(__name__)
 
@@ -335,6 +336,16 @@ class BaseFlashMistral(FlashCausalLM):
             truncation_side="left",
             trust_remote_code=trust_remote_code,
         )
+        
+        try:
+            generation_config = GenerationConfig.from_pretrained(
+                model_id, revision=revision, trust_remote_code=trust_remote_code
+            )
+            if isinstance(generation_config.eos_token_id, (list, set)):
+                # TODO Huge hack
+                tokenizer._eos_token_ids = set(generation_config.eos_token_id)
+        except Exception:
+            pass
 
         config = config_cls.from_pretrained(
             model_id, revision=revision, trust_remote_code=trust_remote_code
