@@ -1,0 +1,25 @@
+{
+  "name": "@virginie-d/cogvlm2",
+  "version": "1.0.0",
+  "description": "cogvlm2 deployment",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "exit 0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/virginie-d/cogvlm2.git"
+  },
+  "keywords": [
+    "vLLM"
+  ],
+  "author": "@virginie-d",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/virginie-d/cogvlm2/issues"
+  },
+  "homepage": "https://github.com/virginie-d/cogvlm2#readme"
+}
